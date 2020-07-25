@@ -2,7 +2,7 @@
 
 This repository is a collection of versatile pintools.
 Assembled shared-objects for 64-bit architecture have been provided. Source code files have been provided for further customisation and re-assembling.
-[template.cpp](https://github.com/hexterisk/pintools/blob/master/template.cpp): Template of a pintool for creating new tools.
+  [template.cpp](https://github.com/hexterisk/pintools/blob/master/template.cpp): Template of a pintool for creating new tools.
 
 Tools:
 
