@@ -12,6 +12,7 @@ std::list<UINT64> addressTainted;
 
 // Define macros.
 #define SKIP(){ if(skipOpen++ == 0) return; }
+#define MAINLIBC "__libc_start_main"
 
 
 /*******************************************************************************************************************\
@@ -246,6 +247,12 @@ VOID trackData(UINT64 insAddr, std::string insDis, REG reg) {
     }
 }
 
+// Get tainted length at string comparison call.
+VOID mainHandler(CHAR **argv) {
+    //std::cout << *(argv+1) << " " << std::hex << (UINT64)(argv+1) << std::endl;
+    addressTainted.push_back((UINT64)*(argv+1));
+}
+
 
 /*******************************************************************************************************************\
 |                                             INSTRUMENTATION FUNCTIONS                                             |
@@ -320,6 +327,24 @@ VOID instrumentSyscallEntry(THREADID thread_id, CONTEXT *ctx, SYSCALL_STANDARD s
         addressTainted.push_back(buf+i);
         
         std::cout << "[TAINT](syscall: read)\t\tbytes tainted from " << std::hex << "0x" << buf << " to 0x" << buf+count << std::endl;
+    }
+}
+
+VOID Image(IMG img, VOID *v) {
+
+    //  Find the strncmp@plt() function.
+    RTN mainRtn = RTN_FindByName(img, MAINLIBC);
+    if (RTN_Valid(mainRtn)) {
+        
+        RTN_Open(mainRtn);
+
+        RTN_InsertCall(
+            mainRtn, IPOINT_BEFORE, (AFUNPTR)mainHandler,
+            // By experiment, argv is the 3rd argument.
+            IARG_FUNCARG_ENTRYPOINT_VALUE, 2,
+            IARG_END);
+        
+        RTN_Close(mainRtn);
     }
 }
 
